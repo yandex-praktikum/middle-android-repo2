@@ -1,5 +1,9 @@
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -11,6 +15,7 @@ import org.junit.Before
 import org.junit.Test
 import ru.yandex.praktikumchatapp.presentation.ChatViewModel
 import ru.yandex.praktikumchatapp.presentation.Message
+import java.util.concurrent.Executors
 
 @ExperimentalCoroutinesApi
 class ChatViewModelTest {
@@ -32,20 +37,42 @@ class ChatViewModelTest {
 
     @Test
     fun `send message should update messages with MyMessage`() = runTest(testDispatcher) {
-        for (i in 1..100) {
-            val sentMessage = Message.MyMessage("TestMessage $i")
-            viewModel.sendMyMessage(sentMessage.text)
+        val sentMessage = Message.MyMessage("TestMessage")
+        viewModel.sendMyMessage(sentMessage.text)
 
-            val actualMessages = viewModel.messages.value
+        val actualMessages = viewModel.messages.value
 
-            assertEquals(i, actualMessages.size)
-            assertEquals(sentMessage, actualMessages.last())
-        }
+        assertEquals(1, actualMessages.size)
+        assertEquals(sentMessage, actualMessages.last())
     }
 
     @Test
-    fun testReceiveMessage_concurrentMessages() = runTest {
-        val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
+    fun testReceiveMessage_concurrentMessages() = runTest(testDispatcher) {
+        val n = 1000
 
+        // creating dispatcher on 8 threads, so we can reproduce race condition
+        val dispatcher = Executors.newFixedThreadPool(8).asCoroutineDispatcher()
+
+        val jobs = mutableListOf<Job>()
+        (1..n).map {
+            jobs += launch(dispatcher) {
+                val sentMessage = Message.MyMessage("TestMessage $it")
+                viewModel.sendMyMessage(sentMessage.text)
+            }
+        }
+
+        jobs.joinAll()
+
+        val actualMessages = viewModel.messages.value
+
+        val set = mutableSetOf<String>()
+        for (message in actualMessages) {
+            if (message is Message.MyMessage) {
+                set.add(message.text)
+            }
+        }
+
+        //checking for missing or duplicated messages in viewModel
+        assertEquals(n, set.size)
     }
 }
