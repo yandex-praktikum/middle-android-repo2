@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import ru.yandex.praktikumchatapp.presentation.ChatViewModel
@@ -14,7 +15,7 @@ import ru.yandex.praktikumchatapp.presentation.Message
 @ExperimentalCoroutinesApi
 class ChatViewModelTest {
 
-    private var testDispatcher: TestDispatcher = StandardTestDispatcher()
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     private lateinit var viewModel: ChatViewModel
 
@@ -30,9 +31,16 @@ class ChatViewModelTest {
     }
 
     @Test
-    fun `send message should update messages with MyMessage`() = runTest {
-        val message = Message.MyMessage("TestMessage")
+    fun `send message should update messages with MyMessage`() = runTest(testDispatcher) {
+        for (i in 1..100) {
+            val sentMessage = Message.MyMessage("TestMessage $i")
+            viewModel.sendMyMessage(sentMessage.text)
 
+            val actualMessages = viewModel.messages.value
+
+            assertEquals(i, actualMessages.size)
+            assertEquals(sentMessage, actualMessages.last())
+        }
     }
 
     @Test
