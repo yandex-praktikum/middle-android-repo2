@@ -53,26 +53,29 @@ class ChatViewModelTest {
         // creating dispatcher on 8 threads, so we can reproduce race condition
         val dispatcher = Executors.newFixedThreadPool(8).asCoroutineDispatcher()
 
+        val sentMessages = mutableListOf<Message>()
         val jobs = mutableListOf<Job>()
+
         (1..n).map {
             jobs += launch(dispatcher) {
                 val sentMessage = Message.MyMessage("TestMessage $it")
-                viewModel.sendMyMessage(sentMessage.text)
+
+                synchronized(sentMessages) {
+                    viewModel.sendMyMessage(sentMessage.text)
+                    sentMessages.add(sentMessage)
+                }
             }
         }
 
         jobs.joinAll()
 
+
+        // ASSERTS
+
         val actualMessages = viewModel.messages.value
 
-        val set = mutableSetOf<String>()
-        for (message in actualMessages) {
-            if (message is Message.MyMessage) {
-                set.add(message.text)
-            }
+        (0..<n).map {
+            assertEquals(actualMessages[it], sentMessages[it])
         }
-
-        //checking for missing or duplicated messages in viewModel
-        assertEquals(n, set.size)
     }
 }
