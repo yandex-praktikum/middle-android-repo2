@@ -18,16 +18,19 @@ class ChatViewModel(
     private val _messages = MutableStateFlow(emptyList<Message>())
     val messages = _messages.asStateFlow()
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error = _error.asStateFlow()
+
     init {
         viewModelScope.launch {
-            while (isWithReplies) {
+            try {
                 repository.getReplyMessage().collect { response ->
-
-                    val currentMessages = _messages.value ?: emptyList()
-                    _messages.value =
+                    _messages.update { currentMessages ->
                         currentMessages + Message.OtherMessage(response)
-
+                    }
                 }
+            } catch (e: Exception) {
+                _error.value = e.message
             }
         }
     }

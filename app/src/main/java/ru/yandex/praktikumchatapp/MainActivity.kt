@@ -71,7 +71,7 @@ fun ChatScreen(
     modifier: Modifier = Modifier
 ) {
     val viewModel = remember { ChatViewModel() }
-    val messagesList = viewModel.messages.collectAsState(emptyList())
+    val messagesList = viewModel.messages.collectAsState()
     val messageText = remember { mutableStateOf("") }
 
     Column(modifier = modifier.fillMaxSize()) {

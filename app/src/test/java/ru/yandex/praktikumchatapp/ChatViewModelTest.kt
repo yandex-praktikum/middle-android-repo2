@@ -23,6 +23,7 @@ class ChatViewModelTest {
     private var testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     private lateinit var viewModel: ChatViewModel
+    private val messagesToSend = List(100) { "Message $it" }
 
     @Before
     fun setup() {
@@ -63,7 +64,7 @@ class ChatViewModelTest {
 
         viewModel.messages.test {
             val emittedMessages = awaitItem()
-            assertThat(emittedMessages.size, equalTo(100))
+            assertThat(emittedMessages.size, equalTo(messagesToSend))
             emittedMessages.forEachIndexed { index, message ->
                 assertThat(message, equalTo(messagesToSend[index]))
             }
