@@ -1,7 +1,9 @@
 package ru.yandex.praktikumchatapp.data
 
+import android.util.Log
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retry
 import kotlin.math.pow
@@ -20,15 +22,12 @@ class ChatRepository(
             .onEach { retryAttempt = 0 }
             .retry { cause ->
                 val retryDelay = firstRetryMillis * retryDelayFactor.pow(retryAttempt.toDouble())
-
-                /*Log.d(
-                    "mainLog",
-                    "retrying attempt: ${retryAttempt + 1}, waiting for ${retryDelay.toLong()}ms"
-                )*/
-
                 delay(retryDelay.toLong())
                 retryAttempt++
                 cause is Exception && retryAttempt < retries
+            }.catch {
+                retryAttempt = 0
+                Log.e("mainLog", it.message.toString())
             }
     }
 }
