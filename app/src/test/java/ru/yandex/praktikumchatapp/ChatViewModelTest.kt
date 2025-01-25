@@ -1,20 +1,26 @@
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import ru.yandex.praktikumchatapp.presentation.ChatViewModel
 import ru.yandex.praktikumchatapp.presentation.Message
+import java.util.concurrent.Executors
 
 @ExperimentalCoroutinesApi
 class ChatViewModelTest {
 
-    private var testDispatcher: TestDispatcher = StandardTestDispatcher()
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     private lateinit var viewModel: ChatViewModel
 
@@ -30,14 +36,46 @@ class ChatViewModelTest {
     }
 
     @Test
-    fun `send message should update messages with MyMessage`() = runTest {
-        val message = Message.MyMessage("TestMessage")
+    fun `send message should update messages with MyMessage`() = runTest(testDispatcher) {
+        val sentMessage = Message.MyMessage("TestMessage")
+        viewModel.sendMyMessage(sentMessage.text)
 
+        val actualMessages = viewModel.messages.value
+
+        assertEquals(1, actualMessages.size)
+        assertEquals(sentMessage, actualMessages.last())
     }
 
     @Test
-    fun testReceiveMessage_concurrentMessages() = runTest {
-        val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
+    fun testReceiveMessage_concurrentMessages() = runTest(testDispatcher) {
+        val n = 1000
 
+        // creating dispatcher on 8 threads, so we can reproduce race condition
+        val dispatcher = Executors.newFixedThreadPool(8).asCoroutineDispatcher()
+
+        val sentMessages = mutableListOf<Message>()
+        val jobs = mutableListOf<Job>()
+
+        (1..n).map {
+            jobs += launch(dispatcher) {
+                val sentMessage = Message.MyMessage("TestMessage $it")
+
+                synchronized(sentMessages) {
+                    viewModel.sendMyMessage(sentMessage.text)
+                    sentMessages.add(sentMessage)
+                }
+            }
+        }
+
+        jobs.joinAll()
+
+
+        // ASSERTS
+
+        val actualMessages = viewModel.messages.value
+
+        (0..<n).map {
+            assertEquals(actualMessages[it], sentMessages[it])
+        }
     }
 }
