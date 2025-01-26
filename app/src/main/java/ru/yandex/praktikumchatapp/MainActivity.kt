@@ -22,10 +22,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.yandex.praktikumchatapp.data.ErrorState
 import ru.yandex.praktikumchatapp.presentation.ChatViewModel
 import ru.yandex.praktikumchatapp.presentation.Message
 import ru.yandex.praktikumchatapp.ui.theme.PraktikumChatAppTheme
@@ -71,8 +74,30 @@ fun ChatScreen(
     modifier: Modifier = Modifier
 ) {
     val viewModel = remember { ChatViewModel() }
-    val messagesList = viewModel.messages.observeAsState(emptyList())
+    val messagesList = viewModel.messages.collectAsState()
     val messageText = remember { mutableStateOf("") }
+    val errorState = viewModel.error.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(errorState.value) {
+        when (val error = errorState.value) {
+            is ErrorState.NetworkError -> {
+                snackbarHostState.showSnackbar("Ошибка сети: ${error.message}")
+            }
+
+            is ErrorState.NoConnection -> {
+                snackbarHostState.showSnackbar("Нет подключения к интернету")
+            }
+
+            is ErrorState.Timeout -> {
+                snackbarHostState.showSnackbar("Превышено время ожидания")
+            }
+
+            null -> {
+
+            }
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
 
