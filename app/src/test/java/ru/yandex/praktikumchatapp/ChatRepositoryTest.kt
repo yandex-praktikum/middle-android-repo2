@@ -1,5 +1,6 @@
 package ru.yandex.praktikumchatapp
 
+import android.util.Log
 import app.cash.turbine.test
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,7 +13,10 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.`when`
 import ru.yandex.praktikumchatapp.data.ChatApi
 import ru.yandex.praktikumchatapp.data.ChatRepository
@@ -57,20 +61,24 @@ class ChatRepositoryTest {
         val replyText = "Hello"
         var isException = true
 
-        `when`(chatApi.getReply())
-            .thenReturn(
-                flow {
-                    if (isException) {
-                        isException = false
-                        throw Exception("test exception")
-                    }
-                    emit(replyText)
-                }
-            )
+        mockStatic(Log::class.java).use { mockedLog ->
+            mockedLog.`when`<Int> { Log.e(anyString(), anyString(), any()) }.thenReturn(0)
 
-        chatRepository.getReplyMessage().test {
-            assert(awaitItem() == replyText)
-            cancelAndIgnoreRemainingEvents()
+            `when`(chatApi.getReply())
+                .thenReturn(
+                    flow {
+                        if (isException) {
+                            isException = false
+                            throw Exception("test exception")
+                        }
+                        emit(replyText)
+                    }
+                )
+
+            chatRepository.getReplyMessage().test {
+                assert(awaitItem() == replyText)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.yandex.praktikumchatapp.data.ChatRepository
+import ru.yandex.praktikumchatapp.data.ErrorState
 
 class ChatViewModel(
     val isWithReplies: Boolean = true
@@ -18,7 +19,7 @@ class ChatViewModel(
     private val _messages = MutableStateFlow(emptyList<Message>())
     val messages = _messages.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
+    private val _error = MutableStateFlow<ErrorState?>(null)
     val error = _error.asStateFlow()
 
     init {
@@ -30,7 +31,7 @@ class ChatViewModel(
                     }
                 }
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = ErrorState.NetworkError(e.message ?: "Unknown error")
             }
         }
     }

@@ -23,7 +23,7 @@ class ChatViewModelTest {
     private var testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     private lateinit var viewModel: ChatViewModel
-    private val messagesToSend = List(100) { "Message $it" }
+    private val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
 
     @Before
     fun setup() {
@@ -51,7 +51,6 @@ class ChatViewModelTest {
 
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
-        val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
 
         coroutineScope {
             val jobs = messagesToSend.map { message ->
@@ -64,7 +63,7 @@ class ChatViewModelTest {
 
         viewModel.messages.test {
             val emittedMessages = awaitItem()
-            assertThat(emittedMessages.size, equalTo(messagesToSend))
+            assertThat(emittedMessages, equalTo(messagesToSend))
             emittedMessages.forEachIndexed { index, message ->
                 assertThat(message, equalTo(messagesToSend[index]))
             }
