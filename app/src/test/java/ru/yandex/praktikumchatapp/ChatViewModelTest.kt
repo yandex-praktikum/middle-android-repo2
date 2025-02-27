@@ -1,11 +1,16 @@
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.hamcrest.CoreMatchers.equalTo
 import org.junit.After
+import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
 import ru.yandex.praktikumchatapp.presentation.ChatViewModel
@@ -32,12 +37,27 @@ class ChatViewModelTest {
     @Test
     fun `send message should update messages with MyMessage`() = runTest {
         val message = Message.MyMessage("TestMessage")
+        viewModel.sendMyMessage(message.text)
+        val expect = listOf<Message>(message)
+        val actual = viewModel.messages.value
+        assertThat(actual, equalTo(expect))
 
     }
 
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
         val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
-
+        val jobs = mutableListOf<Job>()
+        for (message in messagesToSend) {
+            val job = launch {
+                viewModel.sendMyMessage(message.text)
+            }
+            jobs.add(job)
+        }
+        jobs.joinAll()
+        val actual = viewModel.messages.value.map {
+            it as Message.MyMessage
+        }
+        assertThat(actual, equalTo(messagesToSend))
     }
 }
