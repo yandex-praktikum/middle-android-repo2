@@ -7,6 +7,6 @@ class ChatRepository(
 ) {
 
     fun getReplyMessage(): Flow<String> {
-        return api.getReply()
+        return api.getReply()  // TODO Задание 2: добавьте обработку ошибок
     }
 }

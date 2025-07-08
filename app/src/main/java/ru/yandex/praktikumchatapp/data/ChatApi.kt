@@ -90,7 +90,7 @@ class ChatApi {
         while (currentCoroutineContext().isActive) {
             delay(Random.nextLong(MAXIMUM_RESPONSE_DELAY))
 //        if (Random.nextBoolean()) {
-//            throw Exception("Ошибка запроса", Throwable("Something went wrong"))
+//            throw Exception("Ошибка запроса", Throwable("Something went wrong")) // TODO Задание 2: раскоментируйте для проверки обработки ошилбок
 //        }
             emit(responses.random())
         }

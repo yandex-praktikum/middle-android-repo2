@@ -73,6 +73,7 @@ fun ChatScreen(
     val viewModel = remember { ChatViewModel() }
     val messagesList = viewModel.messages.observeAsState(emptyList())
     val messageText = remember { mutableStateOf("") }
+    // TODO Задание 3: добавьте focusRequester
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -94,6 +95,7 @@ fun ChatScreen(
         Row(
             modifier = Modifier
                 .padding(16.dp)
+                // TODO Задание 3: добавьте focusRequester
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {

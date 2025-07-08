@@ -30,14 +30,16 @@ class ChatViewModelTest {
     }
 
     @Test
-    fun `send message should update messages with MyMessage`() = runTest {
+    fun `send message should update state with MyMessage`() = runTest {
         val message = Message.MyMessage("TestMessage")
 
+        // TODO Задание 5: допишите юнит-тест
     }
 
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
         val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
 
+        // TODO Задание 6: допишите юнит-тест
     }
 }

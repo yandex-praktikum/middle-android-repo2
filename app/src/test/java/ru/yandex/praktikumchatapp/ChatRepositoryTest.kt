@@ -39,7 +39,7 @@ class ChatRepositoryTest {
 
     @Test
     fun `getReplyMessage should return a non-empty string`() = runTest {
-
+        // TODO Задание 2: напишите юнит-тест
     }
 
     @Test

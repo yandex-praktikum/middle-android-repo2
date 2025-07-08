@@ -13,8 +13,12 @@ class ChatViewModel(
 
     private val repository = ChatRepository()
 
-    private val _messages = MutableLiveData<List<Message>>(emptyList())
+    private val _messages = MutableLiveData<List<Message>>(emptyList())  // TODO Задание 1: замените на Flow
     val messages: LiveData<List<Message>> = _messages
+
+    // TODO Задание 3: добавьте состояние shouldShowKeyboard
+
+    // TODO Задание 4: замените messages и shouldShowKeyboard на state
 
     init {
         viewModelScope.launch {
