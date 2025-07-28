@@ -1,5 +1,9 @@
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -46,5 +50,25 @@ class ChatViewModelTest {
     fun testReceiveMessage_concurrentMessages() = runTest {
         val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
 
+        coroutineScope {
+            val jobs = messagesToSend.map { msg ->
+                launch {
+                    viewModel.sendMyMessage(msg.text)
+                }
+            }
+            jobs.joinAll()
+        }
+
+        advanceUntilIdle()
+
+        val actualMessages = viewModel.messages.value
+
+        assertEquals(100, actualMessages.size)
+
+        messagesToSend.forEach { expected ->
+            assert(actualMessages.contains(expected)) {
+                "Message not found: ${expected.text}"
+            }
+        }
     }
 }
