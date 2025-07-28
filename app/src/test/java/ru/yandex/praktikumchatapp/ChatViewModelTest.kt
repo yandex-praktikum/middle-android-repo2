@@ -2,6 +2,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -32,7 +33,13 @@ class ChatViewModelTest {
     @Test
     fun `send message should update messages with MyMessage`() = runTest {
         val message = Message.MyMessage("TestMessage")
+        viewModel.sendMyMessage(message.text)
+        advanceUntilIdle()
 
+        val messageCheck = viewModel.messages.value
+        assert(messageCheck.contains(Message.MyMessage(message.text))) {
+            "Message list should contain the sent MyMessage"
+        }
     }
 
     @Test
