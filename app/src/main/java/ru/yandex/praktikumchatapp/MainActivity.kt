@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ChatScreen(
     modifier: Modifier = Modifier
-) {1
+) {
     val viewModel = remember { ChatViewModel() }
     val messagesList = viewModel.messages.collectAsState(emptyList())
     val messageText = remember { mutableStateOf("") }
