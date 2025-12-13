@@ -23,15 +23,20 @@ class ChatViewModel(
 
     // TODO Задание 4: замените messages и shouldShowKeyboard на state
 
+    private val _shouldShowKeyboard = MutableStateFlow(false)
+    val shouldShowKeyboard: StateFlow<Boolean> = _shouldShowKeyboard
+
     init {
         viewModelScope.launch {
-            while (isWithReplies) {
+            if (isWithReplies) {
                 repository.getReplyMessage().collect { response ->
+                    val isFirstMessage = _messages.value.isEmpty()
 
-                    val currentMessages = _messages.value ?: emptyList()
-                    _messages.value =
-                        currentMessages + Message.OtherMessage(response)
+                    _messages.value += Message.OtherMessage(response)
 
+                    if (isFirstMessage) {
+                        _shouldShowKeyboard.value = true
+                    }
                 }
             }
         }
