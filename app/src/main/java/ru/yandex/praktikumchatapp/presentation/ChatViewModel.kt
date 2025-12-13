@@ -15,27 +15,32 @@ class ChatViewModel(
 
     private val repository = ChatRepository()
 
-    private val _messages =
-        MutableStateFlow<List<Message>>(emptyList())  // TODO Задание 1: замените на Flow
-    val messages: StateFlow<List<Message>> = _messages
+//    private val _messages =
+//        MutableStateFlow<List<Message>>(emptyList())  // TODO Задание 1: замените на Flow
+//    val messages: StateFlow<List<Message>> = _messages
+
+
+    private val _chatState = MutableStateFlow(ChatState())
+    val chatState: StateFlow<ChatState> = _chatState
 
     // TODO Задание 3: добавьте состояние shouldShowKeyboard
 
     // TODO Задание 4: замените messages и shouldShowKeyboard на state
 
-    private val _shouldShowKeyboard = MutableStateFlow(false)
-    val shouldShowKeyboard: StateFlow<Boolean> = _shouldShowKeyboard
+//    private val _shouldShowKeyboard = MutableStateFlow(false)
+//    val shouldShowKeyboard: StateFlow<Boolean> = _shouldShowKeyboard
 
     init {
         viewModelScope.launch {
             if (isWithReplies) {
                 repository.getReplyMessage().collect { response ->
-                    val isFirstMessage = _messages.value.isEmpty()
+                    _chatState.value = _chatState.value.let { state ->
+                        val isFirstMessage = state.messages.isEmpty()
 
-                    _messages.value += Message.OtherMessage(response)
-
-                    if (isFirstMessage) {
-                        _shouldShowKeyboard.value = true
+                        state.copy(
+                            messages = state.messages + Message.OtherMessage(response),
+                            shouldShowKeyboard = isFirstMessage
+                        )
                     }
                 }
             }
@@ -43,7 +48,9 @@ class ChatViewModel(
     }
 
     fun sendMyMessage(messageText: String) {
-        val currentMessages = _messages.value ?: emptyList()
-        _messages.value = currentMessages + Message.MyMessage(messageText)
+        _chatState.value = _chatState.value.copy(
+            messages = _chatState.value.messages + Message.MyMessage(messageText),
+            shouldShowKeyboard = false
+        )
     }
 }

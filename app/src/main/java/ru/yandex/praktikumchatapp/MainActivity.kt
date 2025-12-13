@@ -75,17 +75,16 @@ fun ChatScreen(
     modifier: Modifier = Modifier
 ) {
     val viewModel = remember { ChatViewModel() }
-    val messagesList = viewModel.messages.collectAsState()
+
+    val chatState = viewModel.chatState.collectAsState()
     val messageText = remember { mutableStateOf("") }
-    val shouldShowKeyboard = viewModel.shouldShowKeyboard.collectAsState()
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(shouldShowKeyboard.value) {
-        if (shouldShowKeyboard.value) {
+    LaunchedEffect(chatState.value.shouldShowKeyboard) {
+        if (chatState.value.shouldShowKeyboard) {
             focusRequester.requestFocus()
         }
     }
-    // TODO Задание 3: добавьте focusRequester
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -94,7 +93,7 @@ fun ChatScreen(
                 .weight(1f)
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
         ) {
-            items(messagesList.value) { message ->
+            items(chatState.value.messages) { message ->
                 when (message) {
                     is Message.MyMessage -> MyMessageCard(message)
                     is Message.OtherMessage -> OtherMessageCard(message)
@@ -102,11 +101,9 @@ fun ChatScreen(
             }
         }
 
-
         Row(
             modifier = Modifier
                 .padding(16.dp)
-                // TODO Задание 3: добавьте focusRequester
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -131,7 +128,9 @@ fun ChatScreen(
                     }
                 )
             )
+
             Spacer(modifier = Modifier.width(8.dp))
+
             Button(
                 onClick = {
                     if (messageText.value.isNotBlank()) {
@@ -145,6 +144,7 @@ fun ChatScreen(
         }
     }
 }
+
 
 @Composable
 fun MyMessageCard(message: Message.MyMessage) {

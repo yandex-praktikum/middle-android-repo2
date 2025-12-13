@@ -1,5 +1,6 @@
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -31,15 +32,44 @@ class ChatViewModelTest {
 
     @Test
     fun `send message should update state with MyMessage`() = runTest {
-        val message = Message.MyMessage("TestMessage")
+        val text = "TestMessage"
 
-        // TODO Задание 5: допишите юнит-тест
+        viewModel.sendMyMessage(text)
+
+        val state = viewModel.chatState.value
+        val message = state.messages.first()
+
+        val textMessage =message as Message.MyMessage
+        assert(textMessage.text == text)
     }
+
+
 
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
         val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
 
-        // TODO Задание 6: допишите юнит-тест
+        messagesToSend.forEach { message ->
+            launch {
+                viewModel.sendMyMessage(message.text)
+            }
+        }
+
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.chatState.value
+
+        assert(state.messages.size == messagesToSend.size)
+
+        messagesToSend.forEach { sentMessage ->
+            assert(
+                state.messages.any { received ->
+                    received is Message.MyMessage &&
+                            received.text == sentMessage.text
+                }
+            )
+        }
+
     }
+
 }
