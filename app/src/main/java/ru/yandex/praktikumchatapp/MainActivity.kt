@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,11 +26,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -40,6 +43,8 @@ import ru.yandex.praktikumchatapp.presentation.Message
 import ru.yandex.praktikumchatapp.ui.theme.PraktikumChatAppTheme
 
 class MainActivity : ComponentActivity() {
+    private val chatViewModel: ChatViewModel by viewModels()
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +62,7 @@ class MainActivity : ComponentActivity() {
                     },
                     content = { innerPadding ->
                         ChatScreen(
+                            viewModel = chatViewModel,
                             modifier = Modifier.padding(innerPadding)
                         )
                     }
@@ -68,12 +74,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ChatScreen(
+    viewModel: ChatViewModel,
     modifier: Modifier = Modifier
 ) {
-    val viewModel = remember { ChatViewModel() }
-    val messagesList = viewModel.messages.observeAsState(emptyList())
+    val chatState = viewModel.chatState.collectAsState()
     val messageText = remember { mutableStateOf("") }
-    // TODO Задание 3: добавьте focusRequester
+    val focusRequester = remember { FocusRequester() }
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -83,10 +89,15 @@ fun ChatScreen(
                 .weight(1f)
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
         ) {
-            items(messagesList.value) { message ->
+            items(chatState.value.messages) { message ->
                 when (message) {
                     is Message.MyMessage -> MyMessageCard(message)
-                    is Message.OtherMessage -> OtherMessageCard(message)
+                    is Message.OtherMessage -> {
+                        OtherMessageCard(message)
+                        if (chatState.value.shouldShowKeyboard) {
+                            focusRequester.requestFocus()
+                        }
+                    }
                 }
             }
         }
@@ -95,7 +106,7 @@ fun ChatScreen(
         Row(
             modifier = Modifier
                 .padding(16.dp)
-                // TODO Задание 3: добавьте focusRequester
+                .focusRequester(focusRequester)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
