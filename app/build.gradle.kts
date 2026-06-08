@@ -54,6 +54,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.androidx.core.testing)
+    implementation(libs.kotlinx.collections.immutable)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockito.core)
     testImplementation(libs.turbine)

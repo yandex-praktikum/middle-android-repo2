@@ -13,7 +13,7 @@ class ChatRepository(
         return api.getReply()
             .retryWhen { cause, attempt ->
                 if (cause is Exception && attempt < REPEAT_NUMBER) {
-                    val currentDelay = 1000L * 2.0.pow(attempt.toDouble()).toLong()
+                    val currentDelay = INITIAL_DELAY_MS * 2.0.pow(attempt.toDouble()).toLong()
                     delay(currentDelay)
                     true
                 } else {
@@ -24,6 +24,7 @@ class ChatRepository(
     }
 
     companion object {
-        const val REPEAT_NUMBER = 3
+        private const val REPEAT_NUMBER = 3
+        private const val INITIAL_DELAY_MS = 1000L
     }
 }

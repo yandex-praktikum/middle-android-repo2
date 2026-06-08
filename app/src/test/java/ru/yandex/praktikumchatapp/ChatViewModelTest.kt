@@ -57,7 +57,6 @@ class ChatViewModelTest {
 
         val actualMessages = viewModel.state.value.messages
 
-        assertEquals(100, actualMessages.size)
-        assertTrue(actualMessages.containsAll(messagesToSend))
+        assertEquals(messagesToSend, actualMessages)
     }
 }
